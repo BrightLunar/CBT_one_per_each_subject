@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>모의고사 시스템</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; text-align: center; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        
+        button { padding: 15px 30px; font-size: 18px; margin: 20px; cursor: pointer; border: none; border-radius: 8px; }
+        .btn-start { background-color: #007bff; color: white; }
+        .btn-next { background-color: #28a745; color: white; }
+        .btn-end { background-color: #dc3545; color: white; }
+        
+        .item-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        .item-card img { max-width: 100%; border: 1px solid #eee; display: block; margin: 10px auto; }
+        
+        /* 해설 화면에서는 해설 이미지만 보이거나, 문제+해설을 같이 보일지 제어 가능 */
+        .answer-mode .q-img { opacity: 0.5; } /* 해설 모드일 때 문제 이미지 반투명 처리 */
+        .item-card .a-img { display: none; border: 2px solid #28a745; }
+        .answer-mode .item-card .a-img { display: block; }
+    </style>
+</head>
+<body>
+
+    <!-- 화면 1: 메인 홈 -->
+    <div id="homeScreen" class="screen active">
+        <h1>모의고사 시스템</h1>
+        <p>10개의 문제가 랜덤으로 출제됩니다.</p>
+        <button class="btn-start" onclick="startTest()">시험 시작</button>
+    </div>
+
+    <!-- 화면 2: 문제 및 해설 뷰어 -->
+    <div id="testScreen" class="screen">
+        <h2 id="testTitle">문제 풀이 중...</h2>
+        <div id="contentArea"></div>
+        
+        <button id="nextBtn" class="btn-next" onclick="showAnswers()">다음 (풀이/정답 확인)</button>
+        <button id="endBtn" class="btn-end" style="display:none;" onclick="endTest()">시험 종료</button>
+    </div>
+
+    <script>
+        let currentTestData = [];
+
+        async function startTest() {
+            document.getElementById('homeScreen').classList.remove('active');
+            document.getElementById('testScreen').classList.add('active');
+            
+            // 초기화
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = "<p>문제를 불러오는 중...</p>";
+            contentArea.classList.remove('answer-mode');
+            document.getElementById('testTitle').innerText = "문제 풀이 중...";
+            
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            document.getElementById('endBtn').style.display = 'none';
+
+            // API 호출
+            const response = await fetch('/api/start-test');
+            currentTestData = await response.json();
+            
+            renderContent();
+        }
+
+        function renderContent() {
+            const contentArea = document.getElementById('contentArea');
+            contentArea.innerHTML = "";
+
+            currentTestData.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.innerHTML = `
+                    <h3>${index + 1}번 문제</h3>
+                    <img src="${item.q}" class="q-img" alt="문제 이미지">
+                    <img src="${item.a}" class="a-img" alt="해설 이미지">
+                `;
+                contentArea.appendChild(card);
+            });
+        }
+
+        function showAnswers() {
+            document.getElementById('contentArea').classList.add('answer-mode');
+            document.getElementById('testTitle').innerText = "정답 및 해설";
+            
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('endBtn').style.display = 'inline-block';
+            
+            // 맨 위로 스크롤
+            window.scrollTo(0, 0);
+        }
+
+        function endTest() {
+            // 모든 상태를 초기화하고 홈으로 돌아감
+            currentTestData = [];
+            document.getElementById('testScreen').classList.remove('active');
+            document.getElementById('homeScreen').classList.add('active');
+        }
+    </script>
+</body>
+</html>
