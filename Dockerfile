@@ -1,14 +1,14 @@
-# 1단계: 빌드 환경 (GCC 사용)
+# 1단계: 빌드 환경 (GCC 12)
 FROM gcc:12 AS builder
 
 WORKDIR /app
 COPY . .
 
-# 리눅스 환경에 맞게 컴파일 (ws2_32 대신 pthread 사용)
+# 리눅스 환경에 맞게 컴파일
 RUN g++ -std=c++17 main.cpp -o mock_server -pthread
 
-# 2단계: 실행 환경 (가벼운 데비안 리눅스로 전환)
-FROM debian:bullseye-slim
+# 2단계: 실행 환경 (GCC 12와 호환되는 최신 데비안 리눅스로 변경)
+FROM debian:bookworm-slim
 
 WORKDIR /app
 
