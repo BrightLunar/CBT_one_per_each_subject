@@ -1,0 +1,4 @@
+*.exe
+.git
+.gitignore
+mock_server
